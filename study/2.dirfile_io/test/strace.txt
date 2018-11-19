@@ -1,0 +1,5 @@
+.
+├── [3545345 2054 -rw-rw-r-- turtlog     0]  foo
+└── [3545346 2054 -rw-rw-r-- turtlog     0]  strace.txt
+
+0 directories, 2 files
