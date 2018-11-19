@@ -1,0 +1,47 @@
+# todo
+1.스레드 공부
+2.hw2 스레드 스케쥴러 구현
+
+directory에서 알아야 할것
+    int mkdir(const char *path, mode_t mode)
+        반환값 : 성공시 0
+                실패시 -1
+
+    int chdir(const char *dirname) -> int rmdir(const char *path)
+        chdir : change dir, 지우려하는 dir 존재여부 확인
+        반환값 : 둘 다 성공시 0
+                둘 다 실패시 -1 
+    
+    DIR* opendir(const char *dirname)
+        반환값 : 성공시 디렉토리 스트림에 대한 DIR*형 핸들 반환.
+                        반환된 핸들은 디렉토리 스트림의 첫번째 엔트리를 가르킴.
+                        디렉토리 스트림은 특정 디렉토리의 항목의 순차적인 열.
+                        DIR*는 dirent.h에 있음.
+                실패시 NULL, errno 설정
+    
+    struct dirent *readdir(DIR *dirp)
+        매개변수 : 디렉토리 스트림 포인터
+        반환값 : 성공시 해당 디렉토리 항목의 정보를 담은 struct dirent* 반환.
+                        또한 dirp를 다음 디렉토리 항목으로 이동.
+                        dirent구조체는 dirent.h에 있음
+                실패시 NULL 반환. errno 설정.
+                cf) 디렉토리의 끝을 가르켜도 NULL을 반환. 이 경우 errno를 설정하지 않음.
+        필수적 에러는 EOVERFLOW 뿐임. 구조체의 값이 바르지 못하게 표현됨을 의미.
+
+    int closedir(DIR *dirp)
+        반환값 : 성공시 0
+                실패시 -1. errno 설정
+
+    char *getcwd(char *buf, size_t size)
+        매개변수 : buf는 현재 경로명 담기위한 버퍼
+                    size는 buf의 최대길이 설정.
+        반환값 : 성공시 경로명을 담은 buf를 가르키는 char* 반환
+                실패시 NULL, errno 설정
+
+    stat, lstat, fstat은 모두 똑같이 파일 정보를 알아냄.
+        stat : 원본 파일을 통한 파일 정보
+        lstat : 심볼릭 링크 파일을 통항 파일 정보
+        fstat : fd를 통한 파일 정보
+        
+scandir
+getdirentries
