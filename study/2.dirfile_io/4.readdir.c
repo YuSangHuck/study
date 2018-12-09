@@ -24,9 +24,16 @@ int main(int argc, char** argv){
         exit(1);
     }
     struct dirent* p_dirent;
+    struct dirent* p_arr_dirent[255] = { 0, };
+    int cnt_dirent = 0;
     while((p_dirent = readdir(dirp)) != NULL) {
-        PrintDirent(p_dirent);
+        if(p_dirent->d_name[0] == '.')
+            continue;
+        p_arr_dirent[cnt_dirent++] = p_dirent;
     }
+    closedir(dirp);
+    for(int i=0; i<cnt_dirent; i++)
+        PrintDirent(p_arr_dirent[i]);
 
     return 0;
 }

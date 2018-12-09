@@ -2,21 +2,24 @@
 #include <stdlib.h>             // exit
 #include <string.h>             // strcmp
 #include <dirent.h>             // DIR, opendir
-#include <unistd.h>             // getcwd
+#include <unistd.h>             // getcwd, chdir
 #include <sys/stat.h>           // struct stat, 메타데이터 매크로, open
 #include <fcntl.h>              // open
 #include <pwd.h>                // getpwuid
 #include <string.h>
-#define MAX_CNT_DIRENT      0xFFFF
-#define MAX_SUB_DIR         0xFFFF
+
+#define MAX_CNT_DIRENT          0xFFF
+#define MAX_CNT_SUB_DIR         0x8000
+#define MAX_FILENAME            0xFF
 
 int compare(const void *a, const void *b){
-    struct dirent** pa = (struct dirent **)a;
-    struct dirent** pb = (struct dirent **)b;
-    return strcmp((*pa)->d_name,(*pb)->d_name);
+    char** pa = (char**)a;
+    char** pb = (char**)b;
+    
+    return strcmp(*pa, *pb);
 }
-int DirentSort(struct dirent* ap_dirent, int a_cnt_dirent){
-    qsort(ap_dirent, a_cnt_dirent, sizeof(struct dirent*), compare);
+int DirentNameSort(char** ap_dirent_name, int a_cnt_dirent){
+    qsort(ap_dirent_name, a_cnt_dirent, sizeof(char*), compare);
 }
 
 // ap_tree_struct를 아래처럼 만들어주는 함수
@@ -50,7 +53,7 @@ int SetTreeStruct(char* ap_tree_struct, char* ap_trace_depth, int a_depth){
 }
 
 // info를 "[%7lu %lu %10s %-8s %5s] %s"의 형태로 만들어주는 함수
-int SetInfo(char* ap_info, const struct stat* ap_st, const char* ap_dname){
+int SetInfo(char* ap_info, const struct stat* ap_st, const char* ap_pwd, const char* ap_dname){
     if(ap_info == NULL || ap_st == NULL || ap_dname == NULL)
         return 1;
     
@@ -112,12 +115,29 @@ int SetInfo(char* ap_info, const struct stat* ap_st, const char* ap_dname){
     else if(cnt == 4)       sprintf(size, "%.1lfT", s);
     else if(cnt == 5)       sprintf(size, "%.1lfP", s);
 
+    // 1.7.symbolic link인지 확인
+    char name[255];
+    if(permision[0] == 'l'){
+        // printf("this is symlnk\n -> ");
+        char path[255];
+        sprintf(path, "%s/%s", ap_pwd, ap_dname);
+        char buf[255];
+        if(readlink(path, buf, 255) == -1){
+            perror("readlink");
+            exit(1);
+        }
+        sprintf(name, "%s -> %s", ap_dname, buf);
+    }
+    else{
+        sprintf(name, "%s", ap_dname);
+    }
+
     sprintf(ap_info, "[%7lu %lu %10s %-8s %5s] %s", ap_st->st_ino,
                                                     ap_st->st_dev,
                                                     permision, // st
                                                     username,  // st
                                                     size,      // st
-                                                    ap_dname);
+                                                    name);
     return 0;
 }
 
@@ -129,41 +149,91 @@ int Travalsal(const char* ap_pwd, char* ap_trace_depth, int a_depth, int* ap_cnt
         perror("opendir");
         return 1;
     }
-
     // 1.dirent*의 주소를 저장하는 포인터 배열 선언 후 배열에 dirent*들을 저장.(".", ".."는 제외)
     //  배열의 개수도 카운트 해야 함.
-    struct dirent* p_arr_dirent[MAX_CNT_DIRENT];
+    //  배열의 갯수가 너무 많아지면 주소 할당이 꼬이는듯?
+    //   그래서 readdir 직후 p_dirent->d_name과 cnt_dirent 정상이지만
+    //   p_arr_dirent의 각 요소에 접근해보면 엉망진창.
+    //   이 엉망진창인걸 sorting하니 역시 엉망진창.
+    //   그 뒤에가 다 꼬임. sprint("%s/%s")에서 뒤에 %s에 ""가 들어가는것.(line 175)
+    //   주소가 32KB마다 순환? 되는듯 그래서 struct dirent*배열이 아닌 char*배열을 만듬.
+    // struct dirent* p_arr_dirent[MAX_CNT_DIRENT];
+    // char p_arr_dirent_name[MAX_CNT_DIRENT][MAX_FILENAME];
+    // char** p_arr_dirent_name = (char**)malloc(1);
+    char* p_arr_dirent_name[MAX_CNT_SUB_DIR];
     int cnt_dirent = 0;
     struct dirent* p_dirent;
+
     while((p_dirent = readdir(p_dir)) != NULL){
         if(p_dirent->d_name[0] == '.')
             continue;
-        p_arr_dirent[cnt_dirent++] = p_dirent;
+        
+        // char** tmp = p_arr_dirent_name;
+        // p_arr_dirent_name = (char**)realloc(p_arr_dirent_name, cnt_dirent + 1);
+        // if(p_arr_dirent_name == NULL){
+        //     p_arr_dirent_name = tmp;
+        //     for(int i=0; i<cnt_dirent; i++)
+        //         free(p_arr_dirent_name[i]);
+        //     free(p_arr_dirent_name);
+        //     perror("realloc fail");
+        //     exit(1);
+        // }
+
+        // int len = strlen(p_dirent->d_name);
+        // p_arr_dirent_name[cnt_dirent] = (char*)malloc(len + 1);
+
+        // p_arr_dirent_name[cnt_dirent] = (char*)malloc(MAX_FILENAME);
+        // strcpy(p_arr_dirent_name[cnt_dirent++], p_dirent->d_name);
+        
+        p_arr_dirent_name[cnt_dirent++] = p_dirent->d_name;
+
+        // printf("%s\n", p_arr_dirent_name[cnt_dirent - 1]);
+        // cnt_dirent++;
+
+        // printf("[log] name : %-10s, cnt : %d\n", p_dirent->d_name, cnt_dirent);
+        // for(int i=0; i<cnt_dirent; i++){
+        //     printf("  [log] &p_arr_dirent_name[%2d](%x) %s(%x)\n", i, &p_arr_dirent_name[i], p_arr_dirent_name[i], p_arr_dirent_name[i]);
+        // }
+        
     }
 
-    // 2.direct->name 기준으로 오름차순 정렬.
-    DirentSort((struct dirent *)p_arr_dirent, cnt_dirent);
+    // for(int i=0; i<cnt_dirent; i++){
+    //     printf("  [log] &p_arr_dirent_name[%2d](%x) %s(%x)\n", i, &p_arr_dirent_name[i], p_arr_dirent_name[i], p_arr_dirent_name[i]);
+    // }
+    // // 2.p_arr_dirent_name을 이름 기준으로 오름차순 정렬.
 
+    DirentNameSort(p_arr_dirent_name, cnt_dirent);
+
+    // for(int i=0; i<cnt_dirent; i++){
+    //     printf("  [log] &p_arr_dirent_name[%2d](%x) %s(%x)\n", i, &p_arr_dirent_name[i], p_arr_dirent_name[i], p_arr_dirent_name[i]);
+    // }
+    
     // 3.결과에서 파일들의 트리구조 출력을 위한 ap_trace_depth를 설정함.
     //  특정 directory의 dirent를 탐색 시작할때 depth번째 값을 set하고,
     //  특정 directory의 dirent를 탐색 끝낼때 depth번째 값을 clear한다.
     ap_trace_depth[a_depth] = '1';
+    // for(int i=0; i<=a_depth; i++){
+    //     printf("%c", ap_trace_depth[i]);
+    // }
+    // printf("\n");
 
     // 4.반복문으로 pwd + direct->name으로 stat을 이용해 출력.
     for(int i=0; i<cnt_dirent; i++){
         // 4.1.메타데이터를 읽어올 파일 설정.
         // pwd, filename을 알고있음.
         char filename[255];
-        sprintf(filename, "%s/%s", ap_pwd, p_arr_dirent[i]->d_name);
-
+        sprintf(filename, "%s/%s", ap_pwd, p_arr_dirent_name[i]);
+        // printf(" %s\n %s\n", ap_pwd, p_arr_dirent_name[i]);
+        // printf(" -> %s\n", filename);
         // 4.2.메타데이터 읽어옴.
         struct stat st;
         int ret;
-        if((ret = stat(filename, &st)) == -1){
+        if((ret = lstat(filename, &st)) == -1){
             perror("stat");
             return 1;
         }
-
+        // printf(" [log] stat return\t%d\n", ret);
+        
         // 4.3.stdout에 한 줄 을 출력하기 위한 준비.
         // 트리 구조를 표현하는 tree_struct와
         // 파일의 메타데이터 정보를 표현하는 info를 선언
@@ -171,13 +241,14 @@ int Travalsal(const char* ap_pwd, char* ap_trace_depth, int a_depth, int* ap_cnt
         char info[255] = { 0, };
 
         // 4.3.1.마지막 dirent가 아닐 때
+        // printf("  pwd : %s\n  dirent : %s\n", ap_pwd, p_arr_dirent_name[i]);
         if(i != (cnt_dirent - 1)){
             if(SetTreeStruct(tree_struct, ap_trace_depth, a_depth) == 1){
                 fprintf(stderr, "SetTreeStruct return 1\n");
                 return 1;
             }
 
-            if(SetInfo(info, &st, p_arr_dirent[i]->d_name) == 1){
+            if(SetInfo(info, &st, ap_pwd, p_arr_dirent_name[i]) == 1){
                 fprintf(stderr, "SetInfo return 1\n");
                 return 1;
             }
@@ -190,7 +261,7 @@ int Travalsal(const char* ap_pwd, char* ap_trace_depth, int a_depth, int* ap_cnt
                 return 1;
             }
             
-            if(SetInfo(info, &st, p_arr_dirent[i]->d_name) == 1){
+            if(SetInfo(info, &st, ap_pwd, p_arr_dirent_name[i]) == 1){
                 fprintf(stderr, "SetInfo return 1\n");
                 return 1;
             }
@@ -199,25 +270,40 @@ int Travalsal(const char* ap_pwd, char* ap_trace_depth, int a_depth, int* ap_cnt
         char result[512] = { 0, };
         sprintf(result, "%s %s", tree_struct, info);
         printf("%s\n", result);
+        // printf("#t#\n");
 
-
+        
         // file이 디렉토리라면
         if(S_ISDIR(st.st_mode)){
+            // printf(" [log] st.st_ino : %lld\n", st.st_ino);
+            // printf(" [log] st.st_mode : %o\n", st.st_mode);
+
+            // printf(" [log] filename\t%s\n", filename);
+            // printf(" [log] ap_trace_depth\t");
+            // for(int i=0; i<=a_depth; i++)
+            //     printf("%c", ap_trace_depth[i]);
+            // printf("\n");
+            // printf(" [log] a_depth + 1: %d\n", a_depth + 1);
+            // printf(" [log] ap_cnt_dir: %d\n", *ap_cnt_dir);
+            // printf(" [log] ap_cnt_reg: %d\n", *ap_cnt_reg);
             (*ap_cnt_dir)++;
+            // printf(" [log] before Travalsal\n");
             Travalsal(filename, ap_trace_depth, a_depth + 1, ap_cnt_dir, ap_cnt_reg);
         }
         else{
+            // printf(" [log] st.st_mode : %o\n", st.st_mode);
             (*ap_cnt_reg)++;
         }
     }
+    closedir(p_dir);
     return 0;
 }
 
 int main(int argc, char** argv){
     // 탐색의 시작위치 설정.
-    char* start_dir;
-    if(argc == 1)   start_dir = ".";
-    if(argc == 2)   start_dir = argv[1];
+    char* start_dir = (argc > 1 ? argv[1] : ".");
+    // if(argc == 1)   start_dir = ".";
+    // if(argc == 2)   start_dir = argv[1];
     
     if((chdir(start_dir)) < 0){
         perror(start_dir);
@@ -230,24 +316,20 @@ int main(int argc, char** argv){
     // 결과에서 파일들의 트리구조 출력을 위한 trace_depth를 선언
     // 결과에서 파일과 디렉토리 개수를 출력하기 위한 변수 선언
     int cnt_reg = 0, cnt_dir = 0;
-    char trace_depth[MAX_SUB_DIR] = { 0, };
+    char trace_depth[MAX_CNT_SUB_DIR] = { 0, };
 
     // 탐색 시작.
     printf("%s\n", start_dir);
+    
     if(Travalsal(pwd, trace_depth, 0, &cnt_dir, &cnt_reg) == -1){
         perror("Travalsal");
         exit(1);
     }
 
-    char directory[255];
-    if(cnt_dir == 1)    sprintf(directory, "directory");
-    else                sprintf(directory, "directories");
+    char* directory = (cnt_dir == 1 ? "directory" : "directories");
+    char* file = (cnt_reg == 1 ? "file" : "files");
 
-    char file[255];
-    if(cnt_reg == 1)    sprintf(file, "file");
-    else                sprintf(file, "files");
-
-    char result[255];
+    char result[100];
     sprintf(result,"%d %s, %d %s", cnt_dir, directory, cnt_reg, file);
     printf("\n%s\n", result);
 

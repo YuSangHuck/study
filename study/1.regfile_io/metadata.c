@@ -5,11 +5,16 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-void PrintfStatus(struct stat* pStat){
+void PrintfStatus(struct stat* pStat, char* path){
     printf("st_dev : %lu\n", pStat->st_dev);                                      /* Device.  */
     printf("st_ino : %lu\n", pStat->st_ino);                                      /* File serial number.	*/
     printf("st_nlink : %lu\n", pStat->st_nlink);                                  /* Link count.  */
     printf("st_mode : %o\n", pStat->st_mode);                                     /* File mode.  */           
+    if(S_ISLNK(pStat->st_mode)){
+        char buf[255];
+        readlink(path, buf, 255);
+        printf("  ->  %s\n", buf);
+    }
     printf("st_uid : %d\n", pStat->st_uid);                                       /* User ID of the file's owner.	*/
     printf("st_gid : %d\n", pStat->st_gid);                                       /* Group ID of the file's group.*/
     printf("st_rdev : %lu\n", pStat->st_rdev);                                    /* Device number, if device.  */
@@ -33,13 +38,18 @@ void Stat(char* path, struct stat* pStat){
     printf("path : %s\n", path);
     printf("pStat address : %p\n", pStat);
 
+    // int fd;
+    // if((fd = open(path, O_RDONLY)) < 0){
+    //     perror("open");
+    //     exit(1);
+    // }
     int ret;
-    if((ret = stat(path, pStat)) < 0){
+    if((ret = lstat(path, pStat)) < 0){
         fprintf(stderr, "stat func return %d\n", ret);
         perror("stat");
         exit(1);
     }
-    PrintfStatus(pStat);
+    PrintfStatus(pStat, path);
 }
 
 int main(int argc, char* argv[]){

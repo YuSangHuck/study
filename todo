@@ -45,3 +45,27 @@ directory에서 알아야 할것
         
 scandir
 getdirentries
+
+    qsort(base, 갯수, 요소의크기, 비교함수) : 배열에만 사용가능.
+        ex) typedef struct item;    // 이런 구조체가 존재할 때
+            item* p_item[10];       // 배열인데 배열의 요소가 item*일 때
+            qsort(p_item, 10, sizeof(item*), compare)   // 이런식으로 사용
+
+            int compare(void* a, void* b){
+                // qsort로 정렬하는 배열의 요소의 자료형의 포인터로 a,b를 형변환.
+                // 위의 예제에서 배열의 요소가 item*이므로 a,b를 item**로 형변환.
+                // 배열의 요소의 주소값을 넘겨줘야 swap된게 함수 끝나고도 유지됨.
+                item** pa = (item**)a;
+                item** pb = (item**)b;
+                
+                // item의 멤버변수중에서 비교하고 싶은거 기준으로 비교하면됨.
+                // item에 name이라는 변수가 있고 오름차순으로 정렬하고싶다면?
+                return strcmp((*pa)->name, (*pb)->name);
+            }
+
+
+*segmentation fault 해결
+https://www.morenice.kr/66
+디버깅할 터미널에서 
+1.ulimit -c unlimited
+2.gdb -c 코어파일 실행파일
