@@ -1,9 +1,9 @@
 #include "Queue.h"
 #include <stdio.h>
 
-
+#ifdef WITH_QUEUE
 queue*  Queue(int a_type){
-    // ?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ type
+    // ?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ type
     if(a_type != READY_QUEUE && a_type != WAIT_QUEUE)
         return NULL;
 
@@ -23,14 +23,14 @@ queue*  Queue(int a_type){
     return tmp;
 }
 int     Size(queue* ap_queue){
-    // ?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ
+    // ?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
     if(ap_queue == NULL)
         return -1;
 
     return ap_queue->m_size;
 }
 int     Empty(queue* ap_queue){
-    // ?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ
+    // ?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
     if(ap_queue == NULL)
         return -1;
 
@@ -40,62 +40,62 @@ int     Empty(queue* ap_queue){
         return 0;
 }
 Thread* Front(queue* ap_queue){
-    // ?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ
+    // ?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
     if(ap_queue == NULL)
         return NULL;
 
     return ap_queue->m_head;
 }
 Thread* Back(queue* ap_queue){
-    // ?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ
+    // ?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
     if(ap_queue == NULL)
         return NULL;
 
     return ap_queue->m_tail;
 }
 int     Push(queue* ap_queue, Thread* ap_thread){
-    // 0.?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ
+    // 0.?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
     if(ap_queue == NULL || ap_thread == NULL){
         return -1;
     }
 
-    // 1.?…¸?“œ ê´?ê³? ? •ë¦?. queue.tailê³? thread?‚¬?´?˜ ê´?ê³?
-    // ë¹„ì–´?žˆì§? ?•Š?‹¤ë©?
+    // 1.?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½? ?ï¿½ï¿½ï¿½?. queue.tailï¿½? thread?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½?
+    // ë¹„ì–´?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½ï¿½?
     if(!Empty(ap_queue)){
         ap_queue->m_tail->pNext = ap_thread;
         ap_thread->pPrev = ap_queue->m_tail;
     }
-    // ë¹„ì–´?žˆ?‹¤ë©?
+    // ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ï¿½?
     else{
-        // tail?´ ì¡´ìž¬?•˜ì§? ?•Š?œ¼?‹ˆ ? •?˜ ë¶ˆê??
+        // tail?ï¿½ï¿½ ì¡´ìž¬?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ ë¶ˆï¿½??
     }
 
-    // 2.? êµ¬ì¡° ? •ë¦?
+    // 2.?ï¿½ï¿½ êµ¬ì¡° ?ï¿½ï¿½ï¿½?
     ap_queue->m_tail = ap_thread;
-    // ë¹„ì–´?žˆ?‹¤ë©?
+    // ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ï¿½?
     if(Empty(ap_queue)){
         ap_queue->m_head = ap_thread;
     }
     ap_queue->m_size++;
 }
 int     Pop(queue* ap_queue){
-    // 0.?—?Ÿ¬ì²˜ë¦¬. ?ž˜ëª»ëœ ì£¼ì†Œ ?˜¹??? ë¹„ì–´?žˆ?Š” ?
+    // 0.?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ ?ï¿½ï¿½??? ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½
     if(ap_queue == NULL || Empty(ap_queue))
         return -1;
 
     ap_queue->m_size--;
-    // 1.? êµ¬ì¡° ? •ë¦?
+    // 1.?ï¿½ï¿½ êµ¬ì¡° ?ï¿½ï¿½ï¿½?
     ap_queue->m_head = ap_queue->m_head->pNext;
     if(Empty(ap_queue)){
         ap_queue->m_tail = NULL;
     }
 
-    // 2.?…¸?“œ ê´?ê³? ? •ë¦?
+    // 2.?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½? ?ï¿½ï¿½ï¿½?
     if(!Empty(ap_queue)){
         ap_queue->m_head->pPrev =NULL;
     }
     else{
-        // headê°? ì¡´ìž¬?•˜ì§? ?•Š?œ¼?‹ˆ ? •?˜ ë¶ˆê??
+        // headï¿½? ì¡´ìž¬?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ ë¶ˆï¿½??
     }
 }
 Thread* Search(queue* ap_queue, thread_t a_tid){
@@ -282,3 +282,247 @@ void    GetStatus(queue* ap_queue){
 
     return;
 }
+
+#else
+int     Size(Thread* ap_queue_head){
+    int cnt = 0;
+    Thread* p_cursor = ap_queue_head;
+    while(p_cursor){
+        cnt++;
+        p_cursor = p_cursor->pNext;
+    }
+    return cnt;
+}
+int     Empty(Thread* ap_queue_head){
+    if(ap_queue_head)
+        return 0;
+    else
+        return 1;
+}
+int     Push(Thread** ap_queue_head, Thread** ap_queue_tail, Thread** ap_thread){
+    // 0.?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ
+    if(*ap_thread == NULL){
+        return -1;
+    }
+
+    // 1.?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½? ?ï¿½ï¿½ï¿½?. queue.tailï¿½? thread?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½?
+    // ë¹„ì–´?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½ï¿½?
+    if(!Empty(*ap_queue_head)){
+        (*ap_queue_tail)->pNext = *ap_thread;
+        (*ap_thread)->pPrev = *ap_queue_tail;
+    }
+    // ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ï¿½?
+    else{
+        // tail?ï¿½ï¿½ ì¡´ìž¬?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ ë¶ˆï¿½??
+    }
+    // 2.?ï¿½ï¿½ êµ¬ì¡° ?ï¿½ï¿½ï¿½?
+    *ap_queue_tail = *ap_thread;
+    // ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ï¿½?
+    if(Empty(*ap_queue_head)){
+        *ap_queue_head = *ap_thread;
+    }  
+}
+int     Pop(Thread** ap_queue_head, Thread** ap_queue_tail){
+    // 0.?ï¿½ï¿½?ï¿½ï¿½ì²˜ë¦¬. ?ï¿½ï¿½ëª»ëœ ì£¼ì†Œ ?ï¿½ï¿½??? ë¹„ì–´?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½
+    if(*ap_queue_head == NULL)
+        return -1;
+
+    // 1.?ï¿½ï¿½ êµ¬ì¡° ?ï¿½ï¿½ï¿½?
+    *ap_queue_head = (*ap_queue_head)->pNext;
+    if(Empty(*ap_queue_head)){
+        *ap_queue_tail = NULL;
+    }
+
+    // 2.?ï¿½ï¿½?ï¿½ï¿½ ï¿½?ï¿½? ?ï¿½ï¿½ï¿½?
+    if(!Empty(*ap_queue_head)){
+        (*ap_queue_head)->pPrev =NULL;
+    }
+    else{
+        // headï¿½? ì¡´ìž¬?ï¿½ï¿½ï¿½? ?ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ?ï¿½ï¿½?ï¿½ï¿½ ë¶ˆï¿½??
+    }
+}
+Thread* Search(Thread* ap_queue_head, thread_t a_tid){
+    if(ap_queue_head == NULL || a_tid == NULL)
+        return NULL;
+
+    Thread* p_cursor = ap_queue_head;
+    while(p_cursor){
+        if(p_cursor->tid == a_tid)
+            break;
+        p_cursor = p_cursor->pNext;
+    }
+    return p_cursor;
+}
+int     Remove(Thread** ap_queue_head, Thread** ap_queue_tail, Thread* ap_thread){
+    if(*ap_queue_head == NULL || ap_thread == NULL)
+        return -1;
+
+    int ret = -1;
+    Thread* p_cursor = *ap_queue_head;
+    while(p_cursor){
+        if(p_cursor == ap_thread){
+            if(p_cursor->pPrev != NULL && p_cursor->pNext != NULL){
+                p_cursor->pPrev->pNext = p_cursor->pNext;
+                p_cursor->pNext->pPrev = p_cursor->pPrev;
+            }
+            else if(p_cursor->pPrev == NULL && p_cursor->pNext != NULL){
+                *ap_queue_head = p_cursor->pNext;
+                (*ap_queue_head)->pPrev = NULL;
+            }
+            else if(p_cursor->pPrev != NULL && p_cursor->pNext == NULL){
+                *ap_queue_tail = p_cursor->pPrev;
+                (*ap_queue_tail)->pNext = NULL;
+            }
+            else{
+                *ap_queue_head = NULL;
+                *ap_queue_tail = NULL;
+            }
+
+            ret = 0;
+            break;
+        }
+        p_cursor = p_cursor->pNext;
+    }
+    
+    return ret;
+}
+void    GetStatus(Thread* ap_queue_head){
+    printf("size : %d\n", Size(ap_queue_head));
+    Thread* p_cursor;
+
+    for(int i = 0; i < Size(ap_queue_head); i++)
+        printf("|---------------");
+    printf("|\n");
+
+
+
+    // Thread* adress
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "Thread*");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14d", p_cursor);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+
+    for(int i = 0; i < Size(ap_queue_head); i++)
+        printf("|---------------");
+    printf("|\n");
+
+
+
+    // ThreadStatus status
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "status");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        if(p_cursor->status == 0){
+            printf("| %14s", "RUN");
+        }
+        else if(p_cursor->status == 1){
+            printf("| %14s", "READY");
+        }
+        else if(p_cursor->status == 2){
+            printf("| %14s", "BLOCKED");
+        }
+        else{
+            printf("| %14s", "ZOMBIE");
+        }
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+
+    // thread_t parentTid
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "parentTid");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14lu", p_cursor->parentTid);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+
+     // thread_t tid
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "tid");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14lu", p_cursor->tid);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+
+     // BOOL bRunnable
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "bRunnable");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14d", p_cursor->bRunnable);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+
+     // Thread* pPrev
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "pPrev");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14d", p_cursor->pPrev);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+
+     // Thread* pNext
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("|-%-14s", "pNext");
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+    p_cursor = ap_queue_head;
+    while(p_cursor){
+        printf("| %14d", p_cursor->pNext);
+        p_cursor = p_cursor->pNext;
+    }
+    printf("|\n");
+
+    return;
+}
+
+#endif

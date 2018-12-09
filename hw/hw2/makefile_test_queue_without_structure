@@ -1,0 +1,12 @@
+test_queue : test_queue.o Thread.o Queue.o Init.o
+	gcc -o test_queue test_queue.o Thread.o Queue.o Init.o
+test_queue.o : test_queue.c
+	gcc -c test_queue.c
+Thread.o : Thread.c Thread.h
+	gcc -c Thread.c -lpthread
+Queue.o : Queue.c Queue.h 
+	gcc -c Queue.c
+Init.o : Init.c Init.h
+	gcc -c Init.c
+clean:
+	rm -f *.o
