@@ -3,14 +3,17 @@
 void* Tc2ThreadProc(void* param)
 {
 	thread_t tid = 0;
-	int count = 0;
+	int count = 5;
 	int i;
 	int* retVal;
 	tid = thread_self();
-	for(int i=0;i<10;i++){
+
+	// if((int)param == 1)	count = 2;
+	// else				count = 6;
+	for(int i=0; i<count; i++){
+		printf("Tc1ThreadProc: my thread id (%p), arg is (%d)\n", tid, (int)param);
+		// count++;
 		sleep(2);
-		printf("Tc1ThreadProc: my thread id (%d), arg is (%d)\n", (int)tid, ((int)param));
-		count++;
 		
 	}             /* sleep for 1 seconds */
 	retVal = (int*)param;
@@ -37,13 +40,12 @@ TestCase2(void)
 	thread_create(&tid[3], NULL, (void*)Tc2ThreadProc,(void*) 4);	
 	thread_create(&tid[4], NULL, (void*)Tc2ThreadProc,(void*) 5);
 	
-	printf("thread_join\n");
 	for(i=0;i<TOTAL_THREAD_NUM;i++)
 	{
 		int retVal;
-		thread_join(tid[i],(void **)&retVal);
+		thread_join(tid[i], (void **)&retVal);
 
-		printf("Thread [ %d ] is finish Return : [ %d ] ",(int)tid[i], retVal);
+		printf("Thread [ %p ] is finish Return : [ %d ] \n", tid[i], retVal);
 	}
 
 	return ;

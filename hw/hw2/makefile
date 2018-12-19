@@ -1,5 +1,5 @@
 OBJS = TestMain.o Thread.o TestCase3.o TestCase2.o TestCase1.o Scheduler.o Queue.o Init.o Common.o
-# OBJS = Queue.o a.o
+# OBJS = Queue.o z.o
 LIBS =
 
 CC = gcc
@@ -7,7 +7,7 @@ CFLAGS = -g -c
 LDFLAGS = -lpthread
 
 TARGET = TestMain.out
-# TARGET = a.out
+# TARGET = z.out
 
 CORE = core
 PCH = *.gch

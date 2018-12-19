@@ -29,10 +29,14 @@ typedef struct _Thread Thread;
 typedef struct _Thread {
 	ThreadStatus			status;
 	void* 				pExitCode;
-    	pthread_t			tid;
-    	pthread_cond_t     		readyCond;
+	pthread_t			tid;
+	pthread_cond_t     	readyCond;
+	pthread_mutex_t   	readyMutex;
+   	pthread_cond_t     	joinCond;
+	pthread_mutex_t   	joinMutex;
+	BOOL				joinFlag;
+	BOOL				exitFlag;
    	BOOL				bRunnable;
-   	pthread_mutex_t   		readyMutex;
 	pthread_t			parentTid;
 	Thread*				pPrev;
 	Thread*				pNext;

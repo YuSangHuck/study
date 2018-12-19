@@ -79,6 +79,7 @@ void    _ContextSwitch(Thread* ap_curTCB, Thread* ap_newTCB){
 int		RunScheduler( void ){
     while(1){
         LOG_THREAD(parent, RunScheduler, start);
+        // printf("scheduler start\n");
         #ifdef LOG
         GetStatus(ReadyQHead);
         #endif

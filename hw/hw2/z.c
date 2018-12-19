@@ -30,7 +30,7 @@
 //     printf("%p\n", NULL);
 // }
 
-// @ test for pthread_join
+// // @ test for pthread_join
 // #include <pthread.h>
 // #include <stdio.h>
 // #include <stdlib.h>
@@ -52,6 +52,12 @@
 //     }             /* sleep for 1 seconds */
 //     retVal = (int*)param;
 //     pthread_exit(retVal);
+//     for(int i=0; i<=cnt; i++){
+//         sleep(1);
+//         printf("Tc1ThreadProc: my thread id (%d), arg is (%d)\n", (int)tid, (int)param);
+        
+//     }             /* sleep for 1 seconds */
+    
 //     return NULL;
 // }
 
@@ -94,54 +100,64 @@
 //     pthread_join(tid, (void**)&ret);
 //     printf("TestCase2 exit %d\n", ret);
 //     return 0;
+//     // pthread_exit후에 작동하는지 확인.
 // }
 
 
 
-// @ test for Queue
-#include "Queue.h"
-#include <stdlib.h>
-#define PUSH        1
-#define POP         2
-#define GETSTATUS   3
-void Manual(){
-    printf("1.Push(Head)\t2.Pop()\t3.GetStatus\n");
-}
-int main(){
-    srand(time(NULL));
-    while(1){
-        Manual();
-        int p;
-        scanf("%d", &p);
-        if(p == PUSH){
-            if(Size(ReadyQHead) == 0){
-                Thread* tcb = (Thread*)malloc(sizeof(Thread));
-                tcb->status = rand() % 4;
-                tcb->parentTid = rand() % 10000;
-                tcb->tid = rand() % 10000;
-                tcb->bRunnable = 0;
-                tcb->pPrev = 0;
-                tcb->pNext = 0;
-                Push(&ReadyQHead, &ReadyQTail, &tcb);
-            }
-            else{
-                Push(&ReadyQHead, &ReadyQTail, &ReadyQHead);
-            }
-        }
-        else if(p == POP){
-            if(Size(ReadyQHead) == 0){
-                printf("Queue is empty\n");
-            }
-            else{
-                Pop(&ReadyQHead, &ReadyQTail);
-            }
-        }
-        else if(p == GETSTATUS){
-            GetStatus(ReadyQHead);
-        }
-        else{
-            printf("wrong manual\n");
-        }
-    }
+// // @ test for Queue
+// #include "Queue.h"
+// #include <stdlib.h>
+// #define PUSH        1
+// #define POP         2
+// #define GETSTATUS   3
+// void Manual(){
+//     printf("1.Push(Head)\t2.Pop()\t3.GetStatus\n");
+// }
+// int main(){
+//     srand(time(NULL));
+//     while(1){
+//         Manual();
+//         int p;
+//         scanf("%d", &p);
+//         if(p == PUSH){
+//             if(Size(ReadyQHead) == 0){
+//                 Thread* tcb = (Thread*)malloc(sizeof(Thread));
+//                 tcb->status = rand() % 4;
+//                 tcb->parentTid = rand() % 10000;
+//                 tcb->tid = rand() % 10000;
+//                 tcb->bRunnable = 0;
+//                 tcb->pPrev = 0;
+//                 tcb->pNext = 0;
+//                 Push(&ReadyQHead, &ReadyQTail, &tcb);
+//             }
+//             else{
+//                 Push(&ReadyQHead, &ReadyQTail, &ReadyQHead);
+//             }
+//         }
+//         else if(p == POP){
+//             if(Size(ReadyQHead) == 0){
+//                 printf("Queue is empty\n");
+//             }
+//             else{
+//                 Pop(&ReadyQHead, &ReadyQTail);
+//             }
+//         }
+//         else if(p == GETSTATUS){
+//             GetStatus(ReadyQHead);
+//         }
+//         else{
+//             printf("wrong manual\n");
+//         }
+//     }
 
+// }
+
+// @ test for system_call of thread_exit 
+#include <pthread.h>
+
+int main(){
+    pthread_exit(NULL);
+    printf("h\n");
+    return 0;
 }

@@ -50,9 +50,9 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
     WrapperArg wrapper_arg;
     wrapper_arg.funcPtr = start_routine;
     wrapper_arg.funcArg = arg;
-    #ifdef LOG
+#ifdef LOG
     fprintf(stderr, "[%-15s]  [%-15s]   arg : %d\n", "parent", "thread_create", (int)arg);
-    #endif
+#endif
 
     if(pthread_create(thread, attr, __wrapperFunc, &wrapper_arg) != 0)
         LOG_THREAD(parent, thread_create, pthread_create fail);
@@ -71,6 +71,10 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
 	p_tcb->tid = *thread;
     pthread_cond_init(&(p_tcb->readyCond), NULL);
     pthread_mutex_init(&(p_tcb->readyMutex), NULL);
+    pthread_cond_init(&(p_tcb->joinCond), NULL);
+    pthread_mutex_init(&(p_tcb->joinMutex), NULL);
+    p_tcb->joinFlag = FALSE;
+	p_tcb->exitFlag = FALSE;
     
     // 3.Push TCB
     LOG_THREAD(parent, thread_create, 3.Push TCB);
@@ -90,21 +94,54 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
 }
 
 
-int 	thread_join(thread_t thread, void **retval)
-{
+int 	thread_join(thread_t thread, void **retval){
+#ifdef LOG
+    printf("thread_join called in tid %p\n", thread);
+#endif
+
     Thread* p_tcb = Search(ReadyQHead, thread);
     if(p_tcb == NULL)
         fprintf(stderr, "thread_join :: Search error!\n");
-    pthread_mutex_lock(&g_mutex);
-    // exit이 호출될떄까지 잠
-    pthread_cond_wait(&g_cond, &g_mutex);
+    
+#ifdef LOG
+    printf("thread_join try to get mutex\n");
+#endif
+    pthread_mutex_lock(&(p_tcb->joinMutex));
+#ifdef LOG
+    printf("thread_join get mutex\n");
+#endif
+
+    // thread_exit과 동기화
+    p_tcb->joinFlag = TRUE;
+    if(p_tcb->exitFlag){
+        // exit이 먼저 호출 된 경우
+        // exit이 자고있으므로 깨워주고 join은 대기
+        // pthread_cond_signal(&(p_tcb->joinCond));
+        // pthread_cond_wait(&(p_tcb->joinCond), &(p_tcb->joinMutex));
+        // 근데 아무것도 안해도 됨.
+    }
+    else{
+        // join이 먼저 호출 된 경우
+        // exit이 호출될떄까지 잠
+#ifdef LOG
+        printf("thread_join cond_wait\n");
+#endif
+        pthread_cond_wait(&(p_tcb->joinCond), &(p_tcb->joinMutex));
+#ifdef LOG
+        printf("thread_join receive cond_sig\n");
+#endif
+    }
+
     // exit이 호출되면 pExitCode를 복사
     *((int*)retval) = p_tcb->pExitCode;
     
     // 자원정리
     // free(g_curRun);
 
-    pthread_mutex_unlock(&g_mutex);
+    pthread_mutex_unlock(&(p_tcb->joinMutex));
+#ifdef LOG
+    printf("thread_join %d resume mutex & cond\n", p_tcb->pExitCode);
+#endif
 }
 
 
@@ -126,20 +163,49 @@ int 		thread_cancel(thread_t tid)
 }
 
 
-int thread_exit(void* retval)
-{
-    printf("thead_exit called with %d\n", (int)retval);
+int thread_exit(void* retval){
+#ifdef LOG
+    printf("thread_exit called with %d\n", (int)retval);
+#endif
+
     Thread* p_tcb = Search(ReadyQHead, pthread_self());
     if(p_tcb == NULL)
         fprintf(stderr, "thread_exit :: Search error!\n");
 
-    pthread_mutex_lock(&g_mutex);
+#ifdef LOG
+    printf("thread_exit try to get mutex\n");
+#endif
+    pthread_mutex_lock(&(p_tcb->joinMutex));
+#ifdef LOG
+    printf("thread_exit get mutex\n");
+#endif
+
+    // thread_join과 동기화
+    p_tcb->exitFlag = TRUE;
+    if(p_tcb->joinFlag){
+        // join이 먼저 호출 된 경우
+        // join을 호출한 스레드를 깨움.
+        pthread_cond_signal(&(p_tcb->joinCond));
+    }
+    else{
+        // exit이 먼저 호출 된 경우
+        // 대기
+        // pthread_cond_wait(&(p_tcb->joinCond), &(p_tcb->joinMutex));
+        // 대기하고 있으면 join이 exit 깨워주고 자는게 이론상으로 맞지만 아무것도 안해도 됨.
+    }
+
     // 반환값 정리.
     p_tcb->pExitCode = retval;
-    // join을 호출한 함수를 깨움.
-    pthread_cond_signal(&g_cond);
-    pthread_mutex_unlock(&g_mutex);
-    
+
+
+    pthread_mutex_unlock(&(p_tcb->joinMutex));
+#ifdef LOG
+    printf("thead_exit %d resume mutex & cond\n", (int)retval);
+#endif
+
+    // _Exit(0);
+    pthread_exit(NULL);
+
     // 자원 정리는 thread_join에서
     
     return 0;

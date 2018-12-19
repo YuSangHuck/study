@@ -34,8 +34,10 @@ http://www.yolinux.com/TUTORIALS/LinuxTutorialPosixThreads.html#DEBUGGING
 		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
 		thread_exit called with 3
 2.pthread api의 동작에 대해서 찾아볼 것.
+  thread_exit하면 rdq에서 빠져야 되는거 아닌가? 스케쥴링 대상이 아닐텐데
+  thread_join과 thread_exit 동기화에서 각각 mutex와 cond가 필요한거 아닌가? 일단 Thread.h에 임의로 추가함.
 3.TCB에 ready_mutex와 ready_cond는 왜 필요한가?
-4.@
+4.
 
 
 

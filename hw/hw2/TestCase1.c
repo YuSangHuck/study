@@ -12,15 +12,15 @@ void* Tc1ThreadProc(void* param)
 
     tid = thread_self();
 
-    count = 5;
+    count = 3;
     while (count > 0)
     {
-        /* sleep for 1 seconds */
-        sleep(2);
         // for(int i=0; i<99999999; i++);
         // fprintf(stderr, "Tc1ThreadProc: my thread id (%p), arg is (%d)\n", tid, (int)param);
         printf("Tc1ThreadProc: my thread id (%p), arg is (%d)\n", tid, (int)param);
         count--;
+        /* sleep for 1 seconds */
+        sleep(2);
     }
     retVal = (int*)param;
     thread_exit(retVal);
