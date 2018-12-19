@@ -1,2 +1,5 @@
 core
 *.o
+*.pch
+*.gch
+*.out
