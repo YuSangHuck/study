@@ -18,7 +18,7 @@
 void main(int argc, char* argv[])
 {
 	int TcNum;
-	thread_t tid1,tid2,tid3,tid4;
+	thread_t tid1, tid2, tid3;
 
 	if(argc != 2)
 	{
@@ -29,12 +29,13 @@ void main(int argc, char* argv[])
 	Init(  );
 	
 	TcNum = atoi(argv[1]);
-	
+	// TcNum = 2;
+
 	switch(TcNum)
 	{
 		case 1:
 		    thread_create(&tid1, NULL, (void*)TestCase1, 0);
-			break;
+		    break;
 		case 2:
 			thread_create(&tid2, NULL, (void*)TestCase2, 0);
 		    break;
@@ -45,6 +46,8 @@ void main(int argc, char* argv[])
 	}
 
 	RunScheduler();
-	while(1){}
+	while(1){
+		printf("TestMain\n");
+	}
 }
 

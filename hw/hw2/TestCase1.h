@@ -7,6 +7,7 @@
 #include <time.h>
 #include <errno.h>
 #include "Thread.h"
+#include "Common.h"
 
 #define TOTAL_THREAD_NUM (5)
 void* Tc1ThreadProc(void* param);

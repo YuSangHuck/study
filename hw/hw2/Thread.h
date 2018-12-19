@@ -1,11 +1,16 @@
 #ifndef __THREAD_H__
 #define __THREAD_H__
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
+#include <signal.h>
+// #include "Init.h"
+// #include "Scheduler.h"
+// #include "Common.h"
 
 
-
-#define TIMESLICE	(2)
+#define TIMESLICE	(1)
 
 
 typedef int BOOL;

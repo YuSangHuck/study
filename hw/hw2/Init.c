@@ -1,18 +1,21 @@
 #include "Init.h"
-#include "Thread.h"
 
 void Init(){
-    // Init.hÀÇ Àü¿ªº¯¼ö
+    // Init.hï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // Queue.hÀÇ Àü¿ªº¯¼ö
+    // Queue.hï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // Scheduler.hÀÇ Àü¿ªº¯¼ö
+    // Scheduler.hï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // TestCase1,2,3.hÀÇ Àü¿ªº¯¼ö
+    // TestCase1,2,3.hï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // Thread.hÀÇ Àü¿ªº¯¼ö
+    // Thread.hï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     ReadyQHead = NULL;
     ReadyQTail = NULL;
     WaitQHead = NULL;
     WaitQTail = NULL;
+
+    // Common.h
+    pthread_mutex_init(&g_mutex, NULL);
+    pthread_cond_init(&g_cond, NULL);
 }

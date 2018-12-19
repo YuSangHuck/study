@@ -1,0 +1,151 @@
+http://www.yolinux.com/TUTORIALS/LinuxTutorialPosixThreads.html#DEBUGGING
+
+/////////////////////////////////////////////////////////////////////
+#테스트 목록
+1.가송형 wakeup과 wait_handler 동기화 어떻게 했는가
+	sleep 상태 혹은 printf 호출 중에 cond_wait가 호출 되면 어떻게 되는가?
+	지금 thread_proc이 3가지 내용이 있음.
+	 1.sleep(1)
+	 2.fprintf(정보)
+	 3.count--
+	근데 이게 cond_wait때문에 어디는 씹히고, 어디는 여러번 실행되고 이러는듯?
+		Tc1ThreadProc: my thread id (0x7fb957ade700), arg is (1)
+		Tc1ThreadProc: my thread id (0x7fb9572dd700), arg is (2)
+		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
+		Tc1ThreadProc: my thread id (0x7fb9562db700), arg is (4)
+		Tc1ThreadProc: my thread id (0x7fb9562db700), arg is (4)
+		Tc1ThreadProc: my thread id (0x7fb955ada700), arg is (5)
+		Tc1ThreadProc: my thread id (0x7fb957ade700), arg is (1)
+		thread_exit called with 1
+		Tc1ThreadProc: my thread id (0x7fb9572dd700), arg is (2)
+		Tc1ThreadProc: my thread id (0x7fb9572dd700), arg is (2)
+		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
+		Tc1ThreadProc: my thread id (0x7fb9562db700), arg is (4)
+		thread_exit called with 4
+		Tc1ThreadProc: my thread id (0x7fb955ada700), arg is (5)
+		Tc1ThreadProc: my thread id (0x7fb9572dd700), arg is (2)
+		Tc1ThreadProc: my thread id (0x7fb9572dd700), arg is (2)
+		thread_exit called with 2
+		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
+		Tc1ThreadProc: my thread id (0x7fb955ada700), arg is (5)
+		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
+		Tc1ThreadProc: my thread id (0x7fb955ada700), arg is (5)
+		thread_exit called with 5
+		Tc1ThreadProc: my thread id (0x7fb956adc700), arg is (3)
+		thread_exit called with 3
+2.pthread api의 동작에 대해서 찾아볼 것.
+3.TCB에 ready_mutex와 ready_cond는 왜 필요한가?
+4.@
+
+
+
+
+슬립상태인 스레드에 pthread_kill하면?
+thread가 실행되다가 sleep상태에 있을때 scheduler에서 pthread_kill(SIGUSR1) 보내는데 이게 씹혀서 wait_handler가 호출 안되는듯.
+ㄴㄴ 이거 아님. wakeup에서 bRunnable = true 했으면 wait_handler에서 bRunnable = false 해줘야 하는데 이게 빠짐
+
+내가 원했던건 스케쥴러에서 하나빼고 실행하고 빼고 실행하고 이건데
+실제 동작은 빼고빼고빼고빼고 실행하고실행하고 이런느낌
+빼는게 여러번 빼지니 scheduler 내부에서 wait_handler에서 Search fail.
+동기화를 해야 할 것 같다 ㅎㅎ
+뭐랑 뭐를 동기화를 해야 될 지는 잘 모르겠다.
+동기화 외에 방법이 있는지 생각 해 보자.
+-> 이건 동기화 문제가 아니라 스케쥴러에서 sleep을 queue가 비어있을때만 해서 그럼. 로직이 잘못된거
+
+
+
+#당장 해결해야 하는 문제
+Q1.동기화
+	1.TestMain에서 Runscheduler 주석처리, __wrapperFunc에서 wait_handler 주석처리
+		세그폴트 안뜸.
+		스케쥴링 구현부분에서 세그폴트 발생한듯.
+		같은 TCB에 대해서 wakeup과 wait_handler의 순서에 따라 segfault 발생 여부가 갈림.
+		parent가 wakeup한 후에 child가 wait_handler 호출하면 pthread_mutex_lock에서 문제 발생
+		wakeup 후 wait_handler가 중요한게 아니라 RunScheduler 후 wait_handler라서 그럼.
+		RunScheduler에서 readyQ에 있던걸 Pop해서 readyQ가 비어있는 상태에서 wait_handler를 호출하니
+		Search(tid)의 결과가 NULL이 나오고, mutex_lock(NULL.rmutex) 이딴형식이라 그럼.
+	2.1번까지의 내용은 잠시 미뤄두자.
+	  스레드는 개별적인 스택을 가짐.
+	  근데 A,B스레드끼리 각자 스택의 변수의 주소를 주고 받으면 어떻게 될까?
+	  A가 B에게 주소를 넘겼다 가정하면, B가 주소를 넘겨받는 순간과 B에서 주소를 사용하는 순간에 A의 스택프레임에 변화가 있다면 이는 segmetation fault를 만들어 낼 수 있다.
+	  해결 방법은 동적할당해서 heap영역에 만들어서 넘기던가 동기화 해서 스텍프레임이 변화되기 전에 사용하면 됨.
+
+	  멀티스레드,프로세스를 간단하게 비교하면?
+		multi-thread	vs	multi-process
+	  Stack	개별 할당		개별 할당
+	  Heap	공유			개별 할당
+	  Code	공유			개별 할당
+	  Data	공유			개별 할당
+
+	  멀티 스레드에 대해 좀 더 알아보자.
+	  좀 더 자세히 말하면 sp(Stack Pointer), fp(Frame Pointer), pc(Program Counter)는 공유 되지 않음.
+	  또한 context switch가 더 빠른 이유.
+		1.힙,코드,데이터 영역응 공유하므로 stack만 관리하면 됨.
+		2.캐시메모리를 리셋할 필요가 없음.
+	  무튼 완벽하게 동기화 하면 됨.
+	  뮤텍스를 이용해서 동기화하려했는데 가끔 실패 ㅅㅂ
+Q2.child의 wait_handler를 호출하기도 전에 _ContextSwitch에서 wakeup을 호출
+
+/////////////////////////////////////////////////////////////////////
+#hw2 기록
+1.thread_create와 __wrapper의 동기화 문제.
+[thread_create	]		[__wrapper	]
+
+TCB_Init()	--------------->
+				wait_handler
+
+TCB_Init 이후에 wait_handler가 호출되길 원함.
+A1.sigwait로 동기화 할 경우
+	 __wrapper가 생성되기 전에 SIGUSR을 보내는 문제가 발생.
+	이럴 경우 __wrapper는 영원히 sigwait에서 멈춰있음.
+A2.parent thread와 child thread끼리 signal을 주고받자.
+	parent의 입장에서  child의 tid를 알지만, child는 parent의 tid를 모르므로 일단 보류.
+	1.child를 만들 때 parent의 tid를 넘긴다
+		가능하지만 과제 형식을 깨므로 보류
+	2.전역변수로 g_ptid를 만들어서 parent의 tid를 저장해놓는다.
+		가능하지만 야매같으니 보류
+A3.mutex와 cond_var를 이용하자.
+	이 방법으로 하니 parent,child의 순서에 상관없이 내가 원하는 흐름대로 진행됨.
+	하지만 새로운 문제 발생.
+	child의 wait_handler를 호출하기도 전에 _ContextSwitch에서 wakeup을 호출하네?..
+	mutex이용한 동기화로 해결 함.
+	thread_create에서 push하고 cond_wait -> __wrapperFunc에서 wait_handler 호출 직전 cond_signal
+
+
+
+
+/////////////////////////////////////////////////////////////////////
+#시그널
+signal	-> rt_sigaction
+sigwait	-> rt_sigtimedwait
+
+0.signal과 sigaction
+ -signal
+	간편해서 좋음.
+	시그널을 객체로 보지 않고 단일 대상으로 본다는 단점.
+	시그널을 처리하기위해서 필요한것?
+	 -시그널 set
+	 -시그널에 대한 정책
+	 -시그널 함수
+	이런것을 객체로 묶어놓은게 sigaction
+ -sigaction
+	위에서 말한것처럼 시그널을 단일 대상이 아닌 set,정책,함수등을 묶은 객체로 취급.
+	http://man7.org/linux/man-pages/man2/sigaction.2.html
+	https://nxmnpg.lemoda.net/ko/2/sigaction
+	http://database.sarang.net/study/glibc/21.htm#7.2
+
+
+1.프로세스
+	1.1.핸들러 유무에 따른 sigwait 동작 확인.
+		1.1.1.시그널에 대한 별도의 핸들러가 없는 시그널을 sigwait할 경우.
+			signal을 받는 순간 기본 핸들러인 terminate(SIGUSR1의 경우)가 실행되서 종료됨
+		1.1.2.시그널에 대해 별도의 핸들러를 등록한 시그널을 sigwait할 경우.
+			signal을 받는 순간 기본핸들러가 등록되어있으므로 terminate되지 않음.
+			또한 핸들러를 호출하지도 않음.
+	1.2.펜딩리스트 확인방법 : sigset_t에 대해 알아 볼 것.
+		sigset_t은 unsingd long int인가 하여튼 typedef임.
+		1.2.1.sigpending & sigismember?
+		1.2.2.
+	1.3.시그널, sigwait의 순서에 따른 결과 확인
+2.스레드
+

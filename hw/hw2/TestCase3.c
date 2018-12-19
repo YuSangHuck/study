@@ -7,8 +7,8 @@ void* Tc3ThreadProc(void* param)
 	tid = thread_self();
 	while (1)
 	{
-		sleep(2);
-		printf("Tc3ThreadProc: my thread id:(%d), arg : %d\n", (int)tid, *((int*)param));
+		sleep(1);
+		printf("Tc3ThreadProc: my thread id:(%d), arg : %d\n", (int)tid, ((int)param));
 	}
 	retVal=(int*)param;
 	thread_exit(retVal);
