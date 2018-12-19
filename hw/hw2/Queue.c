@@ -1,6 +1,4 @@
 #include "Queue.h"
-#include <stdio.h>
-
 #ifdef WITH_QUEUE
 queue*  Queue(int a_type){
     // ?��?��처리. ?��못된 type
@@ -59,20 +57,20 @@ int     Push(queue* ap_queue, Thread* ap_thread){
         return -1;
     }
 
-    // 1.?��?�� �?�? ?���?. queue.tail�? thread?��?��?�� �?�?
-    // 비어?���? ?��?���?
+    // 1.?��?�� �??�?? ?���??. queue.tail�?? thread?��?��?�� �??�??
+    // 비어?���?? ?��?���??
     if(!Empty(ap_queue)){
         ap_queue->m_tail->pNext = ap_thread;
         ap_thread->pPrev = ap_queue->m_tail;
     }
-    // 비어?��?���?
+    // 비어?��?���??
     else{
-        // tail?�� 존재?���? ?��?��?�� ?��?�� 불�??
+        // tail?�� 존재?���?? ?��?��?�� ?��?�� 불�??
     }
 
-    // 2.?�� 구조 ?���?
+    // 2.?�� 구조 ?���??
     ap_queue->m_tail = ap_thread;
-    // 비어?��?���?
+    // 비어?��?���??
     if(Empty(ap_queue)){
         ap_queue->m_head = ap_thread;
     }
@@ -84,18 +82,18 @@ int     Pop(queue* ap_queue){
         return -1;
 
     ap_queue->m_size--;
-    // 1.?�� 구조 ?���?
+    // 1.?�� 구조 ?���??
     ap_queue->m_head = ap_queue->m_head->pNext;
     if(Empty(ap_queue)){
         ap_queue->m_tail = NULL;
     }
 
-    // 2.?��?�� �?�? ?���?
+    // 2.?��?�� �??�?? ?���??
     if(!Empty(ap_queue)){
         ap_queue->m_head->pPrev =NULL;
     }
     else{
-        // head�? 존재?���? ?��?��?�� ?��?�� 불�??
+        // head�?? 존재?���?? ?��?��?�� ?��?�� 불�??
     }
 }
 Thread* Search(queue* ap_queue, thread_t a_tid){
@@ -305,44 +303,50 @@ int     Push(Thread** ap_queue_head, Thread** ap_queue_tail, Thread** ap_thread)
         return -1;
     }
 
-    // 1.?��?�� �?�? ?���?. queue.tail�? thread?��?��?�� �?�?
-    // 비어?���? ?��?���?
+    // 1. relationship between nodes
+    // 1.?��?�� �??�?? ?���??. queue.tail�?? thread?��?��?�� �??�??
+    // 비어?���?? ?��?���??
     if(!Empty(*ap_queue_head)){
         (*ap_queue_tail)->pNext = *ap_thread;
         (*ap_thread)->pPrev = *ap_queue_tail;
+        (*ap_thread)->pNext = NULL;
     }
-    // 비어?��?���?
+    // 비어?��?���??
     else{
-        // tail?�� 존재?���? ?��?��?�� ?��?�� 불�??
+        // tail?�� 존재?���?? ?��?��?�� ?��?�� 불�??
     }
-    // 2.?�� 구조 ?���?
+
+    // 2. struct of Queue(Head,Tail)
+    // 2.?�� 구조 ?���??
     *ap_queue_tail = *ap_thread;
-    // 비어?��?���?
+    // 비어?��?���??
     if(Empty(*ap_queue_head)){
         *ap_queue_head = *ap_thread;
-    }  
+    }
+    return 0;
 }
 int     Pop(Thread** ap_queue_head, Thread** ap_queue_tail){
     // 0.?��?��처리. ?��못된 주소 ?��??? 비어?��?�� ?��
     if(*ap_queue_head == NULL)
         return -1;
 
-    // 1.?�� 구조 ?���?
+    // 1.?�� 구조 ?���??
     *ap_queue_head = (*ap_queue_head)->pNext;
     if(Empty(*ap_queue_head)){
         *ap_queue_tail = NULL;
     }
 
-    // 2.?��?�� �?�? ?���?
+    // 2.?��?�� �??�?? ?���??
     if(!Empty(*ap_queue_head)){
         (*ap_queue_head)->pPrev =NULL;
     }
     else{
-        // head�? 존재?���? ?��?��?�� ?��?�� 불�??
+        // head�?? 존재?���?? ?��?��?�� ?��?�� 불�??
     }
+    return 0;
 }
 Thread* Search(Thread* ap_queue_head, thread_t a_tid){
-    if(ap_queue_head == NULL || a_tid == NULL)
+    if(ap_queue_head == NULL || (void*)a_tid == NULL)
         return NULL;
 
     Thread* p_cursor = ap_queue_head;
@@ -386,10 +390,14 @@ int     Remove(Thread** ap_queue_head, Thread** ap_queue_tail, Thread* ap_thread
     
     return ret;
 }
+
+
 void    GetStatus(Thread* ap_queue_head){
+    printf("   GetStatus called\n");
+    
     printf("size : %d\n", Size(ap_queue_head));
     Thread* p_cursor;
-
+    
     for(int i = 0; i < Size(ap_queue_head); i++)
         printf("|---------------");
     printf("|\n");
@@ -405,7 +413,7 @@ void    GetStatus(Thread* ap_queue_head){
     printf("|\n");
     p_cursor = ap_queue_head;
     while(p_cursor){
-        printf("| %14d", p_cursor);
+        printf("| %14p", p_cursor);
         p_cursor = p_cursor->pNext;
     }
     printf("|\n");
@@ -454,7 +462,7 @@ void    GetStatus(Thread* ap_queue_head){
     printf("|\n");
     p_cursor = ap_queue_head;
     while(p_cursor){
-        printf("| %14lu", p_cursor->parentTid);
+        printf("| %14p", (void*)(p_cursor->parentTid));
         p_cursor = p_cursor->pNext;
     }
     printf("|\n");
@@ -470,7 +478,7 @@ void    GetStatus(Thread* ap_queue_head){
     printf("|\n");
     p_cursor = ap_queue_head;
     while(p_cursor){
-        printf("| %14lu", p_cursor->tid);
+        printf("| %14p", (void*)(p_cursor->tid));
         p_cursor = p_cursor->pNext;
     }
     printf("|\n");
@@ -502,7 +510,7 @@ void    GetStatus(Thread* ap_queue_head){
     printf("|\n");
     p_cursor = ap_queue_head;
     while(p_cursor){
-        printf("| %14d", p_cursor->pPrev);
+        printf("| %14p", p_cursor->pPrev);
         p_cursor = p_cursor->pNext;
     }
     printf("|\n");
@@ -517,11 +525,16 @@ void    GetStatus(Thread* ap_queue_head){
     printf("|\n");
     p_cursor = ap_queue_head;
     while(p_cursor){
-        printf("| %14d", p_cursor->pNext);
+        printf("| %14p", p_cursor->pNext);
         p_cursor = p_cursor->pNext;
     }
     printf("|\n");
 
+    for(int i = 0; i < Size(ap_queue_head); i++)
+        printf("|---------------");
+    printf("|\n");
+
+    printf("   GetStatus return\n");
     return;
 }
 
