@@ -393,7 +393,22 @@ int     Remove(Thread** ap_queue_head, Thread** ap_queue_tail, Thread* ap_thread
     return ret;
 }
 
-
+Thread* __GetTCB(thread_t a_tid){
+    fprintf(stderr, "__GetTCB tid : %p\n", a_tid);
+    Thread* p_tcb;
+    if((p_tcb = Search(ReadyQHead, a_tid)) != NULL){
+        fprintf(stderr, "__GetTCB Search in rdq\n");
+        printf("__GetTCB tcb : %p\n__GetTCB p_tcb->tid : %p\n", p_tcb, p_tcb->tid);
+    }
+    else if((p_tcb = Search(WaitQHead, a_tid)) != NULL){
+        fprintf(stderr, "__GetTCB Search in wtq\n");
+        printf("__GetTCB tcb : %p\n__GetTCB p_tcb->tid : %p\n", p_tcb, p_tcb->tid);
+    }
+    else{
+        fprintf(stderr, "__GetTCB fail\n");
+    }
+    return p_tcb;
+}
 
 
 void    GetStatus(Thread* ap_queue_head){
