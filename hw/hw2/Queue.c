@@ -314,6 +314,8 @@ int     Push(Thread** ap_queue_head, Thread** ap_queue_tail, Thread** ap_thread)
     // 비어?��?���??
     else{
         // tail?�� 존재?���?? ?��?��?�� ?��?�� 불�??
+        (*ap_thread)->pPrev = NULL;
+        (*ap_thread)->pNext = NULL;
     }
 
     // 2. struct of Queue(Head,Tail)
@@ -392,149 +394,346 @@ int     Remove(Thread** ap_queue_head, Thread** ap_queue_tail, Thread* ap_thread
 }
 
 
+// void    GetStatus(Thread* ap_queue_head){
+//     char buf[100] = { 0, };
+//     int offset = 0;
+//     if(ap_queue_head == ReadyQHead){
+//         sprintf(buf, "ReadyQ, size : %d\n", Size(ap_queue_head));
+//     }
+//     else if(ap_queue_head == WaitQHead){
+//         sprintf(buf, "WaitQ, size : %d\n", Size(ap_queue_head));
+//     }
+//     printf("%s", buf);
+
+    
+//     Thread* p_cursor;
+//     for(offset = 0; offset < Size(ap_queue_head); offset++)
+//         sprintf(buf + (16 * offset), "|---------------");
+//     sprintf(buf + (16 * offset), "|\n");
+//     printf("%s", buf);
+
+//     for(int i = 0; i < Size(ap_queue_head); i++)
+//         printf("|---------------");
+//     printf("|\n");
+
+
+
+//     // Thread* adress
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "Thread*");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14p", p_cursor);
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+
+//     for(int i = 0; i < Size(ap_queue_head); i++)
+//         printf("|---------------");
+//     printf("|\n");
+
+
+
+//     // ThreadStatus status
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "status");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         if(p_cursor->status == 0){
+//             printf("| %14s", "RUN");
+//         }
+//         else if(p_cursor->status == 1){
+//             printf("| %14s", "READY");
+//         }
+//         else if(p_cursor->status == 2){
+//             printf("| %14s", "BLOCKED");
+//         }
+//         else{
+//             printf("| %14s", "ZOMBIE");
+//         }
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+
+//     // thread_t parentTid
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "parentTid");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14p", (void*)(p_cursor->parentTid));
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+
+//      // thread_t tid
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "tid");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14p", (void*)(p_cursor->tid));
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+
+//      // BOOL bRunnable
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "bRunnable");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14d", p_cursor->bRunnable);
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+
+//      // Thread* pPrev
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "pPrev");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14p", p_cursor->pPrev);
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+
+//      // Thread* pNext
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("|-%-14s", "pNext");
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+//     p_cursor = ap_queue_head;
+//     while(p_cursor){
+//         printf("| %14p", p_cursor->pNext);
+//         p_cursor = p_cursor->pNext;
+//     }
+//     printf("|\n");
+
+//     for(int i = 0; i < Size(ap_queue_head); i++)
+//         printf("|---------------");
+//     printf("|\n");
+
+//     printf("   GetStatus return\n");
+//     return;
+// }
 void    GetStatus(Thread* ap_queue_head){
-    printf("   GetStatus called\n");
-    
-    printf("size : %d\n", Size(ap_queue_head));
+    char buf[100] = { 0, };
+    int offset;
     Thread* p_cursor;
-    
-    for(int i = 0; i < Size(ap_queue_head); i++)
-        printf("|---------------");
-    printf("|\n");
+    int size = Size(ap_queue_head);
 
-
-
-    // Thread* adress
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "Thread*");
-        p_cursor = p_cursor->pNext;
+    if(ap_queue_head == ReadyQHead){
+        sprintf(buf, "ReadyQ, size : %d\n", Size(ap_queue_head));
     }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14p", p_cursor);
-        p_cursor = p_cursor->pNext;
+    else if(ap_queue_head == WaitQHead){
+        sprintf(buf, "WaitQ, size : %d\n", Size(ap_queue_head));
     }
-    printf("|\n");
+    printf("%s", buf);
+    if(size > 0){
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|---------------");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
 
 
-
-    for(int i = 0; i < Size(ap_queue_head); i++)
-        printf("|---------------");
-    printf("|\n");
-
-
-
-    // ThreadStatus status
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "status");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        if(p_cursor->status == 0){
-            printf("| %14s", "RUN");
+        // Thread* adress
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "Thread*");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14p", p_cursor);
+            p_cursor = p_cursor->pNext;
         }
-        else if(p_cursor->status == 1){
-            printf("| %14s", "READY");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|---------------");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // Thread* pPrev
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "pPrev");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14p", p_cursor->pPrev);
+            p_cursor = p_cursor->pNext;
         }
-        else if(p_cursor->status == 2){
-            printf("| %14s", "BLOCKED");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // Thread* pNext
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "pNext");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14p", p_cursor->pNext);
+            p_cursor = p_cursor->pNext;
         }
-        else{
-            printf("| %14s", "ZOMBIE");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // ThreadStatus status
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "status");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            if(p_cursor->status == 0){
+                sprintf(buf + (16 * offset), "| %14s", "RUN");
+            }
+            else if(p_cursor->status == 1){
+                sprintf(buf + (16 * offset), "| %14s", "READY");
+            }
+            else if(p_cursor->status == 2){
+                sprintf(buf + (16 * offset), "| %14s", "BLOCKED");
+            }
+            else{
+                sprintf(buf + (16 * offset), "| %14s", "ZOMBIE");
+            }
+            p_cursor = p_cursor->pNext;
         }
-        p_cursor = p_cursor->pNext;
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // BOOL bRunnable
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "bRunnable");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14d", p_cursor->bRunnable);
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // BOOL joinFlag
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "joinFlag");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14d", p_cursor->joinFlag);
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // BOOL exitFlag
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "exitFlag");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14d", p_cursor->exitFlag);
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // void* pExitCode
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "pExitCode");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14d", (int)(p_cursor->pExitCode));
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+        
+        // thread_t parentTid
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "parentTid");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14p", (void*)(p_cursor->parentTid));
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        // thread_t tid
+        p_cursor = ap_queue_head;
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|-%-14s", "tid");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+        for(offset = 0; offset < size; offset++){
+            sprintf(buf + (16 * offset), "| %14p", (void*)(p_cursor->tid));
+            p_cursor = p_cursor->pNext;
+        }
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
+
+
+        for(offset = 0; offset < size; offset++)
+            sprintf(buf + (16 * offset), "|---------------");
+        sprintf(buf + (16 * offset), "|\n");
+        printf("%s", buf);
     }
-    printf("|\n");
 
-
-
-    // thread_t parentTid
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "parentTid");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14p", (void*)(p_cursor->parentTid));
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-
-
-
-     // thread_t tid
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "tid");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14p", (void*)(p_cursor->tid));
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-
-
-
-     // BOOL bRunnable
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "bRunnable");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14d", p_cursor->bRunnable);
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-
-
-
-     // Thread* pPrev
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "pPrev");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14p", p_cursor->pPrev);
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-
-
-     // Thread* pNext
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("|-%-14s", "pNext");
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-    p_cursor = ap_queue_head;
-    while(p_cursor){
-        printf("| %14p", p_cursor->pNext);
-        p_cursor = p_cursor->pNext;
-    }
-    printf("|\n");
-
-    for(int i = 0; i < Size(ap_queue_head); i++)
-        printf("|---------------");
-    printf("|\n");
-
-    printf("   GetStatus return\n");
     return;
 }
 
