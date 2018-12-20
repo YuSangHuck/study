@@ -10,7 +10,7 @@
 // #include "Common.h"
 
 
-#define TIMESLICE	(1)
+#define TIMESLICE	(10)
 
 
 typedef int BOOL;
@@ -27,19 +27,19 @@ typedef enum{
 
 typedef struct _Thread Thread;
 typedef struct _Thread {
-	ThreadStatus			status;
+	Thread*				pPrev;
+	Thread*				pNext;
+	ThreadStatus		status;
+   	BOOL				bRunnable;
+	BOOL				joinFlag;
+	BOOL				exitFlag;
 	void* 				pExitCode;
+	pthread_t			parentTid;
 	pthread_t			tid;
 	pthread_cond_t     	readyCond;
 	pthread_mutex_t   	readyMutex;
    	pthread_cond_t     	joinCond;
 	pthread_mutex_t   	joinMutex;
-	BOOL				joinFlag;
-	BOOL				exitFlag;
-   	BOOL				bRunnable;
-	pthread_t			parentTid;
-	Thread*				pPrev;
-	Thread*				pNext;
 } Thread;	
 
 typedef struct __wrapperArg {

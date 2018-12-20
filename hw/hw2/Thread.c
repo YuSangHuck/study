@@ -63,18 +63,19 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
     
     // 2.TCB Init
     LOG_THREAD(parent, thread_create, 2.TCB_Init);
-	p_tcb->status = THREAD_STATUS_READY;
-	p_tcb->bRunnable = FALSE;
 	p_tcb->pPrev = NULL;
 	p_tcb->pNext = NULL;
+	p_tcb->status = THREAD_STATUS_READY;
+	p_tcb->bRunnable = FALSE;
+    p_tcb->joinFlag = FALSE;
+	p_tcb->exitFlag = FALSE;
+    p_tcb->pExitCode = NULL;
 	p_tcb->parentTid = thread_self();
 	p_tcb->tid = *thread;
     pthread_cond_init(&(p_tcb->readyCond), NULL);
     pthread_mutex_init(&(p_tcb->readyMutex), NULL);
     pthread_cond_init(&(p_tcb->joinCond), NULL);
     pthread_mutex_init(&(p_tcb->joinMutex), NULL);
-    p_tcb->joinFlag = FALSE;
-	p_tcb->exitFlag = FALSE;
     
     // 3.Push TCB
     LOG_THREAD(parent, thread_create, 3.Push TCB);
@@ -95,20 +96,20 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
 
 
 int 	thread_join(thread_t thread, void **retval){
+    printf("thread_join called on tid %p\n", thread);
 #ifdef LOG
-    printf("thread_join called in tid %p\n", thread);
 #endif
-
-    Thread* p_tcb = Search(ReadyQHead, thread);
+    // Thread* p_tcb = Search(ReadyQHead, thread);
+    Thread* p_tcb = __GetTCB(thread);
     if(p_tcb == NULL)
         fprintf(stderr, "thread_join :: Search error!\n");
-    
+    fprintf(stderr, "thread_join &(p_tcb->joinMutex) : %p\n", &(p_tcb->joinMutex));
 #ifdef LOG
-    printf("thread_join try to get mutex\n");
 #endif
+    printf("thread_join try to get mutex\n");
     pthread_mutex_lock(&(p_tcb->joinMutex));
-#ifdef LOG
     printf("thread_join get mutex\n");
+#ifdef LOG
 #endif
 
     // thread_exit과 동기화
@@ -124,21 +125,22 @@ int 	thread_join(thread_t thread, void **retval){
         // join이 먼저 호출 된 경우
         // exit이 호출될떄까지 잠
 #ifdef LOG
-        printf("thread_join cond_wait\n");
 #endif
+        printf("thread_join cond_wait\n");
         pthread_cond_wait(&(p_tcb->joinCond), &(p_tcb->joinMutex));
-#ifdef LOG
         printf("thread_join receive cond_sig\n");
+#ifdef LOG
 #endif
     }
 
     // exit이 호출되면 pExitCode를 복사
     *((int*)retval) = p_tcb->pExitCode;
     
-    // 자원정리
-    // free(g_curRun);
-
     pthread_mutex_unlock(&(p_tcb->joinMutex));
+
+    // 자원정리
+    // free(p_tcb);
+
 #ifdef LOG
     printf("thread_join %d resume mutex & cond\n", p_tcb->pExitCode);
 #endif
@@ -164,8 +166,8 @@ int 		thread_cancel(thread_t tid)
 
 
 int thread_exit(void* retval){
+    // printf("thread_exit called with %d\n", (int)retval);
 #ifdef LOG
-    printf("thread_exit called with %d\n", (int)retval);
 #endif
 
     Thread* p_tcb = Search(ReadyQHead, pthread_self());
@@ -196,7 +198,18 @@ int thread_exit(void* retval){
 
     // 반환값 정리.
     p_tcb->pExitCode = retval;
-
+    p_tcb->status = THREAD_STATUS_ZOMBIE;
+    p_tcb->bRunnable = FALSE;
+    
+    // move ReadyQ to WaitQ
+    // 아래의 내용은 scheduler에서 해주는게 맞음
+    // GetStatus(ReadyQHead);
+    // GetStatus(WaitQHead);
+    // Remove(&ReadyQHead, &ReadyQTail, p_tcb);
+    // Push(&WaitQHead, &WaitQTail, &p_tcb);
+    // GetStatus(ReadyQHead);
+    // GetStatus(WaitQHead);
+    // printf("\n\n");
 
     pthread_mutex_unlock(&(p_tcb->joinMutex));
 #ifdef LOG
@@ -211,7 +224,6 @@ int thread_exit(void* retval){
     return 0;
 }
 
-thread_t	thread_self()
-{
+thread_t	thread_self(){
     return pthread_self();
 }	
