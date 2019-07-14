@@ -4,3 +4,4 @@
 [submodule "aws"]
 	path = aws
 	url = https://github.com/YuSangHuck/study_aws
+	branch = master
