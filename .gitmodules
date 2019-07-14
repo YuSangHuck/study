@@ -1,6 +1,7 @@
 [submodule "nuxt"]
 	path = nuxt
 	url = https://github.com/YuSangHuck/study_nuxt
+	branch = master
 [submodule "aws"]
 	path = aws
 	url = https://github.com/YuSangHuck/study_aws
